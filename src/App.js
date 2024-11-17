@@ -1,43 +1,18 @@
 import React from 'react';
 import { useState } from 'react';
 
-export default function Board() {
-	const [isXNext, setIsXNext] = useState(true);
-	const [squares, setSquares] = useState(Array(9).fill(null));
-	const [outcome, setOutcome] = useState(null);
-
-	function reset() {
-		setIsXNext(true);
-		setSquares(Array(9).fill(null));
-	}
-
-	function nextTurn(squares) {
-		let winner = calculateWinner(squares);
-		if (winner) {
-			return winner;
-		}
-		if (checkIfFull(squares)) {
-			return 'draw';
-		}
-		setIsXNext(!isXNext);
-		return null;
-	}
-
+export function Board({ isXNext, squares, onPlay }) {
 	function handleClick(i) {
-		if (squares[i] || outcome !== null) {
+		if (calculateWinner(squares) || squares[i]) {
 			return;
 		}
 		const nextSquares = squares.slice();
 		nextSquares[i] = isXNext ? 'X' : 'O';
-		setSquares(nextSquares);
-
-		setOutcome(nextTurn(nextSquares));
+		onPlay(nextSquares);
 	}
 
 	return (
 		<>
-			<div className="status">{calculateWinner(squares) ? `Winner: ${calculateWinner(squares)}` : `Next player: ${isXNext ? 'X' : 'O'}`}</div>
-			<button onClick={() => reset()}>Reset</button>
 			<div className="board-row">
 				<Square value={squares[0]} onSquareClick={() => handleClick(0)} />
 				<Square value={squares[1]} onSquareClick={() => handleClick(1)} />
@@ -55,6 +30,57 @@ export default function Board() {
 			</div>
 		</>
 	)
+}
+
+export default function Game() {
+	const [history, setHistory] = useState([Array(9).fill(null)]);
+	const [currentMove, setCurrentMove] = useState(0);
+	const isXNext = currentMove % 2 === 0;
+	const currentSquares = history[currentMove];
+
+	function handlePlay(nextSquares) {
+		const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+		setHistory(nextHistory);
+		setCurrentMove(nextHistory.length - 1);
+	}
+
+	function jumpTo(move) {
+		setCurrentMove(move);
+	}
+
+	const moves = history.map((squares, move) => {
+		let description;
+		if (move == currentMove) {
+			return (
+				<li key={move}>
+					<p>{`You are at move #${move}`}</p>
+				</li>
+			);
+		}
+
+		if (move > 0) {
+			description = `Go to move #${move}`;
+		} else {
+			description = `Go to game start`;
+		}
+		return (
+			<li key={move}>
+				<button onClick={() => jumpTo(move)}>{description}</button>
+			</li>
+		);
+	});
+
+	return (
+		<div className="game">
+			<div className="game-board">
+				<Board isXNext={isXNext} squares={currentSquares} onPlay={handlePlay} />
+			</div>
+			<div className="game-info">
+				<div className="status">{calculateWinner(currentSquares) ? `Winner: ${calculateWinner(currentSquares)}` : `Next player: ${isXNext ? 'X' : 'O'}`}</div>
+				<ol>{moves}</ol>
+			</div>
+		</div >
+	);
 }
 
 function Square({ value, onSquareClick }) {
