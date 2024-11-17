@@ -13,21 +13,20 @@ export function Board({ isXNext, squares, onPlay }) {
 
 	return (
 		<>
-			<div className="board-row">
-				<Square value={squares[0]} onSquareClick={() => handleClick(0)} />
-				<Square value={squares[1]} onSquareClick={() => handleClick(1)} />
-				<Square value={squares[2]} onSquareClick={() => handleClick(2)} />
-			</div>
-			<div className="board-row">
-				<Square value={squares[3]} onSquareClick={() => handleClick(3)} />
-				<Square value={squares[4]} onSquareClick={() => handleClick(4)} />
-				<Square value={squares[5]} onSquareClick={() => handleClick(5)} />
-			</div>
-			<div className="board-row">
-				<Square value={squares[6]} onSquareClick={() => handleClick(6)} />
-				<Square value={squares[7]} onSquareClick={() => handleClick(7)} />
-				<Square value={squares[8]} onSquareClick={() => handleClick(8)} />
-			</div>
+			{[...Array(3)].map((_, rowIndex) => (
+				<div className="board-row" key={rowIndex}>
+					{[...Array(3)].map((_, colIndex) => {
+						const index = rowIndex * 3 + colIndex;
+						return (
+							<Square
+								key={index}
+								value={squares[index]}
+								onSquareClick={() => handleClick(index)}
+							/>
+						);
+					})}
+				</div>
+			))}
 		</>
 	)
 }
@@ -48,12 +47,12 @@ export default function Game() {
 		setCurrentMove(move);
 	}
 
-	const moves = history.map((squares, move) => {
+	const moves = history.map((move) => {
 		let description;
 		if (move == currentMove) {
 			return (
 				<li key={move}>
-					<p>{`You are at move #${move}`}</p>
+					<p class="history-button">{`You are at move #${move}`}</p>
 				</li>
 			);
 		}
@@ -65,10 +64,21 @@ export default function Game() {
 		}
 		return (
 			<li key={move}>
-				<button onClick={() => jumpTo(move)}>{description}</button>
+				<button class="history-button" onClick={() => jumpTo(move)}>{description}</button>
 			</li>
 		);
 	});
+
+	function status() {
+		const winner = calculateWinner(currentSquares);
+		if (winner) {
+			return `Winner: ${winner}`;
+		} else if (checkIfFull(currentSquares)) {
+			return 'Draw';
+		} else {
+			return `Next player: ${isXNext ? 'X' : 'O'}`;
+		}
+	}
 
 	return (
 		<div className="game">
@@ -76,7 +86,7 @@ export default function Game() {
 				<Board isXNext={isXNext} squares={currentSquares} onPlay={handlePlay} />
 			</div>
 			<div className="game-info">
-				<div className="status">{calculateWinner(currentSquares) ? `Winner: ${calculateWinner(currentSquares)}` : `Next player: ${isXNext ? 'X' : 'O'}`}</div>
+				<div className="status">{status()}</div>
 				<ol>{moves}</ol>
 			</div>
 		</div >
