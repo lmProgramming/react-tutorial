@@ -47,7 +47,7 @@ export default function Game() {
 		setCurrentMove(move);
 	}
 
-	const moves = history.map((move) => {
+	const moves = history.map((_, move) => {
 		let description;
 		if (move == currentMove) {
 			return (
